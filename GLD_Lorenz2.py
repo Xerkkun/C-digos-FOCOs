@@ -80,7 +80,7 @@ k = int((tf-t0)/h)
 if k<=m:
     nu = 1
 else:
-    nu = k - m
+    nu = int(k - m)
 
 # Inicialización del vector de estado y tiempo
 x = np.zeros((k+1, 3))

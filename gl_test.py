@@ -32,17 +32,19 @@ def grunwald_letnikov(x,h_alpha,k,alpha,xt,nu):
 
     # Iteraciones del método
     sum_x = 0
-
+    prod_x = np.zeros((k, 1))
     c = binomial_coef(alpha,k,nu)
-    for i in range(1,k+1):
-        # Se calculan las sumas de los coeficientes binomiales en cada iteracion
-        for j in range(nu,k+1):
-            sum_x += c[j]*x[k-j,0]
-            # Las variables x,y,z se evaluan con el vector de tiempo
-        x[i,0] = f(x[i-1,0])*h_alpha - sum_x
-        print(i,x[i-1,0])
-        sum_x = 0
+    for i in range(1, k+1):
 
+        # Se calculan las sumas de los coeficientes binomiales en cada iteracion
+        prod_x[k-i, 0] = c[k-i+1]*x[i-1, 0]
+        sum_x = sum_x + prod_x[k-i, 0]
+
+        x[i, 0] = f(x[i-1, 0])*h_alpha - sum_x
+
+        if i % 1 == 0:
+            # print(i,c[k-i+1],x[i-1,:])
+            print(i, x[i, 0])
     return x
 
 # Definición del orden fraccionario

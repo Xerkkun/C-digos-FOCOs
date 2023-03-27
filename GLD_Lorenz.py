@@ -44,11 +44,11 @@ def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu):
     for i in range(1,k+1):
 
         # Se calculan las sumas de los coeficientes binomiales en cada iteracion
-        for j in range(nu,k+1):
-            sum_x += c[j]*x[k-j,:]
+        for j in range(nu,i):
+            sum_x += c[j]*x[i-j,:]
             # Las variables x,y,z se evaluan con el vector de tiempo
         x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
-        
+
         sum_x = np.zeros(3)
 
         if i%50 == 0 :

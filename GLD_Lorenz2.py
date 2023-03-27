@@ -19,8 +19,8 @@ def lorenz_frac(x):
     rho = 28.0
     xdot = np.zeros_like(x)
     xdot[0] = sigma * (x[1] - x[0])
-    xdot[1] = rho * x[0] - x[1] - x[0] * x[2]
-    xdot[2] = -beta * x[2] + x[0] * x[1]
+    xdot[1] = (rho * x[0]) - x[1] - (x[0] * x[2])
+    xdot[2] = (-beta * x[2]) + (x[0] * x[1])
     return xdot
 
 #coeficientes binomiales
@@ -30,38 +30,36 @@ def binomial_coef(alpha,k,nu):
     for j in range(1,k+nu):
         c[j] = c[j-1] - (c[j-1]*(1+alpha)/j)
         #c[j] = int(c*10**10)/10**10
-        print(c[j])
+        #print(c[j])
     return c
 
 # Definición del método de Grünwald-Letnikov para la derivada de orden fraccionario
-def grunwald_letnikov(x,h_alpha,k,alpha,xt,nu):
+def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu):
     # Integración numérica del sistema de Lorenz con Grünwald-Letnikov
 
     # Iteraciones del método
     sum_x = np.zeros(3)
     prod_x = np.zeros((k,3))
     c = binomial_coef(alpha,k,nu)
-    #print(c)
-    #for i in range(1,k+1):
-    for i in range(1,10):
+
+    for i in range(1,k+1):
+
         # Se calculan las sumas de los coeficientes binomiales en cada iteracion
         prod_x[k-i,:] = c[k-i+1]*x[i-1,:]
         sum_x = sum_x + prod_x[k-i,:]
-        #print(c[k-i+1],x[i-1,:])
-        #print(sum_x[0],sum_x[1],sum_x[2])
-        # Las variables x,y,z se evaluan con el vector de tiempo
-        x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
-        #if i%50 == 0:
-            #print(i,x[i,0],x[i,1],x[i,2])
-            #print(prod_x[i])
 
+        x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
+
+        if i%100 == 0 :
+            #print(i,c[k-i+1],x[i-1,:])
+            print(i,x[i,0],x[i,1],x[i,2])
     return x
 
 # Definición del orden fraccionario
-alpha = 0.9935
+alpha = 0.995
 
 # Definición del vector de estado inicial
-x0 = np.array([1.0, 1.0, 1.0])
+x0 = np.array([0.1, 0.1, 0.1])
 
 # Definición del intervalo de tiempo y el paso de integración
 t0 = 0.0
@@ -70,7 +68,7 @@ h = 0.001
 h_alpha = h**alpha
 
 # Longitud de memoria
-Lm = 500
+Lm = 300
 
 # Número de coeficientes binomiales
 m = Lm/h
@@ -83,7 +81,6 @@ if k<=m:
     nu = 1
 else:
     nu = k - m
-#print(k,m,nu)
 
 # Inicialización del vector de estado y tiempo
 x = np.zeros((k+1, 3))
@@ -92,13 +89,12 @@ xt = np.zeros_like(x)
 xt[:,0] = t
 xt[:,1] = t
 xt[:,2] = t
-#print(lorenz_frac(xt[100,:]))
-
+#print(xt)
 # Condición inicial
 x[0,:] = x0
-#print(x)
-x = grunwald_letnikov(x,h_alpha,k,alpha,xt,nu)
-#print(lorenz_frac(xt[0,:]))
+
+x = grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu)
+#print(lorenz_frac(x0)*h_alpha)
 
 # Gráfica de la solución
 fig = plt.figure(figsize=(10, 8))

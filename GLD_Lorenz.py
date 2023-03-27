@@ -2,7 +2,7 @@
 #   Información
 #   Programa que utiliza la definición del operador diferencial de Grünwald-Letnikov
 #   para aproximar la solución numérica de un sistema de ecuaciones de orden
-#   fraccionario q con valores iniciales.
+#   fraccionario alpha con valores iniciales.
 #   Se utiliza el sistema caótico de Lorenz para calibrar el método numérico.
 #===============================================================================
 import numpy as np
@@ -12,35 +12,96 @@ import matplotlib.pyplot as plt
 #Funciones
 #===============================================================================
 #Ecuaciones del sistema de Lorenz
-def Fx1(x,y,z):
-    a = 10.
-    Fx = a*(y-x)
-    return Fx
+def lorenz_frac(x):
+    # Definición de parámetros del sistema
+    sigma = 10.0
+    beta = 8./3.
+    rho = 28.0
+    xdot = np.zeros_like(x)
+    xdot[0] = sigma * (x[1] - x[0])
+    xdot[1] = (rho * x[0]) - x[1] - (x[0] * x[2])
+    xdot[2] = (-beta * x[2]) + (x[0] * x[1])
+    return xdot
 
-def Fx2(x,y,z):
-    c = 28.
-    Fy = x*(c-z)-y
-    return Fy
+#coeficientes binomiales
+def binomial_coef(alpha,k,nu):
+    c = np.zeros((k+nu,1))
+    c[0] = 1
+    for j in range(1,k+nu):
+        c[j] = c[j-1] - (c[j-1]*(1+alpha)/j)
+        #c[j] = int(c*10**10)/10**10
+        #print(c[j])
+    return c
 
-def Fx3(x,y,z):
-    b = 8./3.
-    Fz = x*y-b*z
-    return Fz
-#===============================================================================
-#   Métodos numéricos
-#===============================================================================
-def GLD(xn,yn,zn,h,q,k):
-    #   Grünwald-Letnikov
-    # h: ancho de paso
-    # q: orden fraccionario
-    # k: número de coeficientes binomiales
-    h_alpha = h**(q)
-    #coeficientes binomiales
-    wjx,wjy,wjz = 1,1,1
-    sum_x,sum_y,sum_z = 0,0,0
-    #revisar la suma por que los productos van en orden diferente para la variable y el coeficiente binomial
-    for j in range(0,k):
-        sum_x,sum_y,sum_z = sum_x + wjx*Fx1(xn,yn,zn),sum_y + wjy*Fx2(xn,yn,zn), sum_z+wjz*Fx3(xn,yn,zn)
-        wjx,wjy,wjz = wjx - (wjx*(1+q))/j,wjy - (wjy*(1+q))/j,wjz - (wjz*(1+q))/j
+# Definición del método de Grünwald-Letnikov para la derivada de orden fraccionario
+def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu):
+    # Integración numérica del sistema de Lorenz con Grünwald-Letnikov
 
-    x,y,z = sum_x + h_alpha*Fx1(xn,yn,zn),sum_y + h_alpha*Fx2(xn,yn,zn),sum_z + h_alpha*Fx3(xn,yn,zn)
+    # Iteraciones del método
+    sum_x = np.zeros(3)
+    c = binomial_coef(alpha,k,nu)
+
+    for i in range(1,k+1):
+
+        # Se calculan las sumas de los coeficientes binomiales en cada iteracion
+        for j in range(nu,k+1):
+            sum_x += c[j]*x[k-j,:]
+            # Las variables x,y,z se evaluan con el vector de tiempo
+        x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
+        
+        sum_x = np.zeros(3)
+
+        if i%50 == 0 :
+            #print(i,c[k-i+1],x[i-1,:])
+            print(i,x[i,0],x[i,1],x[i,2])
+    return x
+
+# Definición del orden fraccionario
+alpha = 0.995
+
+# Definición del vector de estado inicial
+x0 = np.array([0.1, 0.1, 0.1])
+
+# Definición del intervalo de tiempo y el paso de integración
+t0 = 0.0
+tf = 100.0
+h = 0.001
+h_alpha = h**alpha
+
+# Longitud de memoria
+Lm = 300
+
+# Número de coeficientes binomiales
+m = Lm/h
+
+# Definición del número de puntos en la suma de Grünwald-Letnikov
+k = int((tf-t0)/h)
+
+#Principio de memoria corta
+if k<=m:
+    nu = 1
+else:
+    nu = k - m
+
+# Inicialización del vector de estado y tiempo
+x = np.zeros((k+1, 3))
+t = np.linspace(t0, tf, len(x))
+xt = np.zeros_like(x)
+xt[:,0] = t
+xt[:,1] = t
+xt[:,2] = t
+#print(xt)
+# Condición inicial
+x[0,:] = x0
+
+x = grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu)
+#print(lorenz_frac(x0)*h_alpha)
+
+# Gráfica de la solución
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(x[:,0], x[:,1], x[:,2])
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('z')
+plt.show()

@@ -1,19 +1,21 @@
-#===============================================================================
-#   Información
-#   Programa que utiliza la definición del operador diferencial de Grünwald-Letnikov
-#   para aproximar la solución numérica de un sistema de ecuaciones de orden
-#   fraccionario alpha con valores iniciales.
-#   Se utiliza el sistema caótico de Lorenz para calibrar el método numérico.
-#===============================================================================
+"""   Información
+   Programa que utiliza la definición del operador diferencial de Grünwald-Letnikov
+   para aproximar la solución numérica de un sistema de ecuaciones de orden
+   fraccionario alpha con valores iniciales.
+   Se utiliza el sistema caótico de Lorenz para calibrar el método numérico."""
+# ===============================================================================
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from pylab import *
+from mpl_toolkits.mplot3d import axes3d
+from matplotlib import style
 #===============================================================================
 #Funciones
 #===============================================================================
-#Ecuaciones del sistema de Lorenz
+
 def lorenz_frac(x):
-    # Definición de parámetros del sistema
+    """ Ecuaciones del sistema caótico de Lorenz """
     sigma = 10.0
     beta = 8./3.
     rho = 28.0
@@ -23,8 +25,20 @@ def lorenz_frac(x):
     xdot[2] = (-beta * x[2]) + (x[0] * x[1])
     return xdot
 
+def ho2_system(x):
+    """ Cálculo de los coeficientes binomiales """
+    b = 0.1
+    a = 0.2
+    xdot = np.zeros_like(x)
+    xdot[0] = x[1] * x[2]
+    xdot[1] = x[0] - x[1] - a*x[3]
+    xdot[2] = 1 - x[0]*x[0]
+    xdot[3] = b * x[1]
+    return xdot
+
 #coeficientes binomiales
 def binomial_coef(alpha,k,nu):
+    """ Cálculo de los coeficientes binomiales """
     c = np.zeros((k+nu,1))
     c[0] = 1
     for j in range(1,k+nu):
@@ -33,12 +47,11 @@ def binomial_coef(alpha,k,nu):
         #print(c[j])
     return c
 
-# Definición del método de Grünwald-Letnikov para la derivada de orden fraccionario
-def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu):
-    # Integración numérica del sistema de Lorenz con Grünwald-Letnikov
+def grunwald_letnikov(x,h,h_alpha,k,alpha,x_t,nu,d):
+    """Definición del método de Grünwald-Letnikov para la derivada de orden fraccionario"""
 
     # Iteraciones del método
-    sum_x = np.zeros(3)
+    sum_x = np.zeros(d)
     c = binomial_coef(alpha,k,nu)
 
     for i in range(1,k+1):
@@ -49,59 +62,81 @@ def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu):
             # Las variables x,y,z se evaluan con el vector de tiempo
         x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
 
-        sum_x = np.zeros(3)
-
-        if i%50 == 0 :
+        if i%100 == 0 :
+            #print(sum_x)
             #print(i,c[k-i+1],x[i-1,:])
-            print(i,x[i,0],x[i,1],x[i,2])
+            print(x_t[i,0],x[i,0],x[i,1],x[i,2])
+            #arch.write('%.5f' % t + '\t' + '%.5f' % x + '\t' + '%.5f' % y + '\t' + '%.5f' % z + '\t' + '%.5f' % w + '\n')
+        sum_x = np.zeros(d)
+
     return x
 
-# Definición del orden fraccionario
-alpha = 0.995
+def grafica(x,y,z,t):
+    """Función para graficar los atractores en el espacio de fases y guardar en pdf"""
+    subplot(221)
+    p1,=plot(x,y,"m",lw=0.3)
+    xlabel("x")
+    ylabel("y")
+    #plt.axis('square')
 
-# Definición del vector de estado inicial
-x0 = np.array([0.1, 0.1, 0.1])
+    subplot(222)
+    p2,=plot(x,z,"m",lw=0.3)
+    xlabel("x")
+    ylabel("z")
 
-# Definición del intervalo de tiempo y el paso de integración
-t0 = 0.0
-tf = 100.0
-h = 0.001
-h_alpha = h**alpha
+    subplot(223)
+    p3,=plot(y,z,"m",lw=0.3)
+    xlabel("y")
+    ylabel("z")
+    plt.savefig("atractores.pdf",dpi=300,bbox_inches= 'tight')
+    clf()
 
-# Longitud de memoria
-Lm = 300
+def main():
+    """Integración numérica del sistema de Lorenz con Grünwald-Letnikov"""
+    # Definición del orden fraccionario
+    alpha = 0.96
 
-# Número de coeficientes binomiales
-m = Lm/h
+    # Definición del vector de estado inicial
+    x_0 = np.array([0.1, 0.1, 0.1])
 
-# Definición del número de puntos en la suma de Grünwald-Letnikov
-k = int((tf-t0)/h)
+    # Definición del intervalo de tiempo y el paso de integración
+    t_0 = 0.0
+    t_f = 50.0
+    h = 0.01
+    h_alpha = h**alpha
 
-#Principio de memoria corta
-if k<=m:
-    nu = 1
-else:
-    nu = k - m
+    # Longitud de memoria
+    Lm = 300
 
-# Inicialización del vector de estado y tiempo
-x = np.zeros((k+1, 3))
-t = np.linspace(t0, tf, len(x))
-xt = np.zeros_like(x)
-xt[:,0] = t
-xt[:,1] = t
-xt[:,2] = t
-#print(xt)
-# Condición inicial
-x[0,:] = x0
+    # Número de coeficientes binomiales
+    m = Lm/h
 
-x = grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu)
-#print(lorenz_frac(x0)*h_alpha)
+    # Definición del número de puntos en la suma de Grünwald-Letnikov
+    k = int((t_f-t_0)/h)
 
-# Gráfica de la solución
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(x[:,0], x[:,1], x[:,2])
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-plt.show()
+    #Principio de memoria corta
+    if k<=m:
+        nu = 1
+    else:
+        nu = k - m
+
+    #dimensiones del sistema
+    d = 3
+
+    # Inicialización del vector de estado y tiempo
+    x = np.zeros((k+1, d))
+    t = np.linspace(t_0, t_f, len(x))
+    x_t = np.zeros((k+1,1))
+    x_t[:,0] = t
+
+    # Condición inicial
+    x[0,:] = x_0
+
+    x = grunwald_letnikov(x,h,h_alpha,k,alpha,x_t,nu,d)
+
+    t, xx, y, z = x_t[:,0], x[:,0], x[:,1], x[:,2]
+
+    grafica(xx,y,z,t)
+
+if __name__ == '__main__':
+    main()

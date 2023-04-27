@@ -62,7 +62,7 @@ def grunwald_letnikov(x,h,h_alpha,k,alpha,x_t,nu,d):
         # Se calculan las sumas de los coeficientes binomiales en cada iteracion
         for j in range(nu,i):
             sum_x += c[j]*x[i-j,:]
-            # Las variables x,y,z se evaluan con el vector de tiempo
+
         x[i,:] = lorenz_frac(x[i-1,:])*h_alpha - sum_x
 
         if i%100 == 0 :
@@ -98,7 +98,7 @@ def grafica(x,y,z,t):
 def main():
     """Integración numérica del sistema de Lorenz con Grünwald-Letnikov"""
     # Definición del orden fraccionario
-    alpha = 0.96
+    alpha = 0.98
 
     # Definición del vector de estado inicial
     x_0 = np.array([0.1, 0.1, 0.1])
@@ -110,7 +110,7 @@ def main():
     h_alpha = h**alpha
 
     # Longitud de memoria
-    Lm = 10
+    Lm = 300
 
     # Número de coeficientes binomiales
     m = Lm/h

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import style
 
-t, x, y, z, w = np.loadtxt("FE.dat",unpack=True)  #Asigna a las variables los datos de cada columna del archivo de datos
+t, x, y, z, w = np.loadtxt("ho2.rnd",unpack=True)  #Asigna a las variables los datos de cada columna del archivo de datos
 
 subplot(411)
 p1,=plot(t,x,"m",lw=0.7)

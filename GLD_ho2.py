@@ -63,7 +63,7 @@ def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu,d):
             # Las variables x,y,z se evaluan con el vector de tiempo
         x[i,:] = ho2_system(x[i-1,:])*h_alpha - sum_x
 
-        if i%100 == 0 :
+        if i%1000 == 0 :
             #print(sum_x)
             #print(i,c[k-i+1],x[i-1,:])
             print(xt[i,0],x[i,0],x[i,1],x[i,2],x[i,3])
@@ -73,19 +73,19 @@ def grunwald_letnikov(x,h,h_alpha,k,alpha,xt,nu,d):
     return x
 
 # Definición del orden fraccionario
-alpha = 0.999
+alpha = 0.995
 
 # Definición del vector de estado inicial
 x0 = np.array([0.1, 0.1, 0. , 0.])
 
 # Definición del intervalo de tiempo y el paso de integración
 t0 = 0.0
-tf = 50.0
-h = 0.001
+tf = 250.0
+h = 0.005
 h_alpha = h**alpha
 
 # Longitud de memoria
-Lm = 300
+Lm = 3000
 
 # Número de coeficientes binomiales
 m = Lm/h
